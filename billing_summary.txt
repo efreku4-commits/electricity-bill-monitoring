@@ -1,0 +1,8 @@
+------ BILLING SUMMARY ------
+Tariff: 0.5
+Daily kWh: 6.794
+Daily cost: 3.397
+30-day kWh: 203.82
+30-day cost: 101.91
+-----------------------------
+
