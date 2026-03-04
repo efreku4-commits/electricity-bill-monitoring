@@ -23,7 +23,8 @@ int main() {
         cout << "\n--- Electrical Load Monitoring ---\n";
         cout << "1. Add Appliance\n";
         cout << "2. View Appliances\n";
-        cout << "3. Exit\n";
+        cout << "3. Search Appliance\n";
+        cout << "4. Exit\n";
         cout << "Choice: ";
         cin >> choice;
 
@@ -53,25 +54,44 @@ int main() {
             }
 
             cout << fixed << setprecision(2);
-            cout << left << setw(4) << "#"
-                 << setw(20) << "Name"
-                 << setw(10) << "Watts"
-                 << setw(10) << "Hours"
-                 << setw(10) << "kWh/day" << "\n";
-
             for (int i = 0; i < count; i++) {
-                cout << left << setw(4) << i + 1
-                     << setw(20) << appliances[i].name
-                     << setw(10) << appliances[i].watts
-                     << setw(10) << appliances[i].hours
-                     << setw(10) << kwhPerDay(appliances[i]) << "\n";
+                cout << appliances[i].name << " | "
+                     << appliances[i].watts << "W | "
+                     << appliances[i].hours << " hrs | "
+                     << kwhPerDay(appliances[i]) << " kWh/day\n";
             }
         }
-        else if (choice != 3) {
+        else if (choice == 3) {
+            if (count == 0) {
+                cout << "No appliances.\n";
+                continue;
+            }
+
+            string search;
+            cout << "Search name: ";
+            cin.ignore();
+            getline(cin, search);
+
+            bool found = false;
+
+            for (int i = 0; i < count; i++) {
+                if (appliances[i].name.find(search) != string::npos) {
+                    cout << appliances[i].name << " | "
+                         << appliances[i].watts << "W | "
+                         << appliances[i].hours << " hrs | "
+                         << kwhPerDay(appliances[i]) << " kWh/day\n";
+                    found = true;
+                }
+            }
+
+            if (!found)
+                cout << "No match found.\n";
+        }
+        else if (choice != 4) {
             cout << "Invalid choice.\n";
         }
 
-    } while (choice != 3);
+    } while (choice != 4);
 
     cout << "Goodbye.\n";
     return 0;
