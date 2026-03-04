@@ -2,10 +2,11 @@
 #include <fstream>
 #include <iomanip>
 #include <string>
+
 using namespace std;
 
-const string FILE_NAME = "appliances.txt";
-const string BILL_FILE = "billing_summary.txt";
+const string APPLIANCE_FILE = "appliances.txt";
+const string BILLING_FILE   = "billing_summary.txt";
 const int MAX = 100;
 
 struct Appliance {
@@ -14,12 +15,13 @@ struct Appliance {
     double hours;
 };
 
+// ---------- Utility ----------
 double kwhPerDay(Appliance a) {
     return (a.watts / 1000.0) * a.hours;
 }
 
 void saveToFile(Appliance arr[], int count) {
-    ofstream out(FILE_NAME);
+    ofstream out(APPLIANCE_FILE);
     if (!out) {
         cout << "Error saving file.\n";
         return;
@@ -30,12 +32,13 @@ void saveToFile(Appliance arr[], int count) {
             << arr[i].watts << "|"
             << arr[i].hours << "\n";
     }
+
     out.close();
 }
 
 void loadFromFile(Appliance arr[], int &count) {
     count = 0;
-    ifstream in(FILE_NAME);
+    ifstream in(APPLIANCE_FILE);
     if (!in) return;
 
     string line;
@@ -48,114 +51,157 @@ void loadFromFile(Appliance arr[], int &count) {
         arr[count].watts = stod(line.substr(p1 + 1, p2 - p1 - 1));
         arr[count].hours = stod(line.substr(p2 + 1));
         count++;
-
         if (count >= MAX) break;
     }
 
     in.close();
 }
 
-void appendBilling(double tariff, double dayKwh,
-                   double dayCost, double monthKwh, double monthCost) {
-
-    ofstream out(BILL_FILE, ios::app);
-    if (!out) {
-        cout << "Error writing billing file.\n";
+// ---------- Features ----------
+void addAppliance(Appliance arr[], int &count) {
+    if (count >= MAX) {
+        cout << "Limit reached.\n";
         return;
     }
 
-    out << "------ BILLING SUMMARY ------\n";
-    out << "Tariff: " << tariff << "\n";
-    out << "Daily kWh: " << dayKwh << "\n";
-    out << "Daily cost: " << dayCost << "\n";
-    out << "30-day kWh: " << monthKwh << "\n";
-    out << "30-day cost: " << monthCost << "\n";
-    out << "-----------------------------\n\n";
+    cout << "Name: ";
+    cin.ignore();
+    getline(cin, arr[count].name);
 
-    out.close();
+    cout << "Watts: ";
+    cin >> arr[count].watts;
+
+    cout << "Hours per day: ";
+    cin >> arr[count].hours;
+
+    count++;
+    saveToFile(arr, count);
+
+    cout << "Appliance added.\n";
 }
 
+void viewAppliances(Appliance arr[], int count) {
+    if (count == 0) {
+        cout << "No appliances.\n";
+        return;
+    }
+
+    cout << fixed << setprecision(2);
+    cout << left << setw(4) << "#"
+         << setw(20) << "Name"
+         << setw(10) << "Watts"
+         << setw(10) << "Hours"
+         << setw(10) << "kWh/day" << "\n";
+
+    for (int i = 0; i < count; i++) {
+        cout << left << setw(4) << i + 1
+             << setw(20) << arr[i].name
+             << setw(10) << arr[i].watts
+             << setw(10) << arr[i].hours
+             << setw(10) << kwhPerDay(arr[i]) << "\n";
+    }
+}
+
+void searchAppliance(Appliance arr[], int count) {
+    if (count == 0) {
+        cout << "No appliances.\n";
+        return;
+    }
+
+    string search;
+    cout << "Search name: ";
+    cin.ignore();
+    getline(cin, search);
+
+    bool found = false;
+    for (int i = 0; i < count; i++) {
+        if (arr[i].name.find(search) != string::npos) {
+            cout << arr[i].name << " | "
+                 << arr[i].watts << "W | "
+                 << arr[i].hours << " hrs | "
+                 << kwhPerDay(arr[i]) << " kWh/day\n";
+            found = true;
+        }
+    }
+
+    if (!found)
+        cout << "No match found.\n";
+}
+
+void billing(Appliance arr[], int count) {
+    if (count == 0) {
+        cout << "No appliances available.\n";
+        return;
+    }
+
+    double tariff;
+    cout << "Tariff per kWh: ";
+    cin >> tariff;
+
+    double totalDay = 0;
+    for (int i = 0; i < count; i++)
+        totalDay += kwhPerDay(arr[i]);
+
+    double totalMonth = totalDay * 30;
+    double costDay = totalDay * tariff;
+    double costMonth = totalMonth * tariff;
+
+    cout << fixed << setprecision(2);
+    cout << "\nDaily Energy: " << totalDay << " kWh\n";
+    cout << "Daily Cost:   " << costDay << "\n";
+    cout << "30-Day Energy: " << totalMonth << " kWh\n";
+    cout << "30-Day Cost:   " << costMonth << "\n";
+
+    cout << "Save summary? (y/n): ";
+    char c;
+    cin >> c;
+
+    if (c == 'y' || c == 'Y') {
+        ofstream out(BILLING_FILE, ios::app);
+        out << "------ BILLING SUMMARY ------\n";
+        out << "Tariff: " << tariff << "\n";
+        out << "Daily kWh: " << totalDay << "\n";
+        out << "Daily cost: " << costDay << "\n";
+        out << "30-day kWh: " << totalMonth << "\n";
+        out << "30-day cost: " << costMonth << "\n";
+        out << "-----------------------------\n\n";
+        out.close();
+
+        cout << "Saved.\n";
+    }
+}
+
+// ---------- Main ----------
 int main() {
     Appliance appliances[MAX];
     int count = 0;
-    int choice;
 
     loadFromFile(appliances, count);
 
-    cout << "Loaded appliances: " << count << "\n";
+    int choice;
 
     do {
         cout << "\n--- Electrical Load Monitoring ---\n";
         cout << "1. Add Appliance\n";
-        cout << "2. Billing\n";
-        cout << "3. Save\n";
-        cout << "4. Exit\n";
+        cout << "2. View Appliances\n";
+        cout << "3. Search Appliance\n";
+        cout << "4. Billing\n";
+        cout << "5. Save\n";
+        cout << "6. Exit\n";
         cout << "Choice: ";
         cin >> choice;
 
-        if (choice == 1) {
-            if (count >= MAX) {
-                cout << "Limit reached.\n";
-                continue;
-            }
-
-            cout << "Name: ";
-            cin.ignore();
-            getline(cin, appliances[count].name);
-
-            cout << "Watts: ";
-            cin >> appliances[count].watts;
-
-            cout << "Hours per day: ";
-            cin >> appliances[count].hours;
-
-            count++;
-            saveToFile(appliances, count);
-
-            cout << "Appliance added and saved.\n";
-        }
-        else if (choice == 2) {
-            if (count == 0) {
-                cout << "No appliances available.\n";
-                continue;
-            }
-
-            double tariff;
-            cout << "Tariff per kWh: ";
-            cin >> tariff;
-
-            double totalDay = 0;
-            for (int i = 0; i < count; i++)
-                totalDay += kwhPerDay(appliances[i]);
-
-            double totalMonth = totalDay * 30;
-            double costDay = totalDay * tariff;
-            double costMonth = totalMonth * tariff;
-
-            cout << fixed << setprecision(2);
-            cout << "\nDaily Energy: " << totalDay << " kWh\n";
-            cout << "Daily Cost:   " << costDay << "\n";
-            cout << "30-Day Energy: " << totalMonth << " kWh\n";
-            cout << "30-Day Cost:   " << costMonth << "\n";
-
-            cout << "Save billing summary? (y/n): ";
-            char c;
-            cin >> c;
-
-            if (c == 'y' || c == 'Y') {
-                appendBilling(tariff, totalDay, costDay,
-                              totalMonth, costMonth);
-                cout << "Billing summary saved.\n";
-            }
-        }
-        else if (choice == 3) {
-            saveToFile(appliances, count);
-            cout << "Saved.\n";
+        switch (choice) {
+            case 1: addAppliance(appliances, count); break;
+            case 2: viewAppliances(appliances, count); break;
+            case 3: searchAppliance(appliances, count); break;
+            case 4: billing(appliances, count); break;
+            case 5: saveToFile(appliances, count); cout << "Saved.\n"; break;
+            case 6: saveToFile(appliances, count); cout << "Goodbye.\n"; break;
+            default: cout << "Invalid choice.\n";
         }
 
-    } while (choice != 4);
+    } while (choice != 6);
 
-    saveToFile(appliances, count);
-    cout << "Goodbye.\n";
     return 0;
 }
