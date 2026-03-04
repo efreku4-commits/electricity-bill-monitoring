@@ -1,7 +1,9 @@
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 using namespace std;
 
+const string FILE_NAME = "appliances.txt";
 const int MAX = 100;
 
 struct Appliance {
@@ -14,6 +16,22 @@ double kwhPerDay(Appliance a) {
     return (a.watts / 1000.0) * a.hours;
 }
 
+void saveToFile(Appliance arr[], int count) {
+    ofstream out(FILE_NAME);
+    if (!out) {
+        cout << "Error saving file.\n";
+        return;
+    }
+
+    for (int i = 0; i < count; i++) {
+        out << arr[i].name << "|"
+            << arr[i].watts << "|"
+            << arr[i].hours << "\n";
+    }
+
+    out.close();
+}
+
 int main() {
     Appliance appliances[MAX];
     int count = 0;
@@ -22,10 +40,9 @@ int main() {
     do {
         cout << "\n--- Electrical Load Monitoring ---\n";
         cout << "1. Add Appliance\n";
-        cout << "2. View Appliances\n";
-        cout << "3. Search Appliance\n";
-        cout << "4. Billing\n";
-        cout << "5. Exit\n";
+        cout << "2. Billing\n";
+        cout << "3. Save\n";
+        cout << "4. Exit\n";
         cout << "Choice: ";
         cin >> choice;
 
@@ -46,37 +63,22 @@ int main() {
             cin >> appliances[count].hours;
 
             count++;
-            cout << "Appliance added.\n";
+            saveToFile(appliances, count);
+
+            cout << "Appliance added and saved.\n";
+        }
+        else if (choice == 3) {
+            saveToFile(appliances, count);
+            cout << "Saved.\n";
         }
         else if (choice == 4) {
-            if (count == 0) {
-                cout << "No appliances available.\n";
-                continue;
-            }
-
-            double tariff;
-            cout << "Tariff per kWh: ";
-            cin >> tariff;
-
-            double totalDay = 0;
-            for (int i = 0; i < count; i++)
-                totalDay += kwhPerDay(appliances[i]);
-
-            double totalMonth = totalDay * 30;
-            double costDay = totalDay * tariff;
-            double costMonth = totalMonth * tariff;
-
-            cout << fixed << setprecision(2);
-            cout << "\nDaily Energy: " << totalDay << " kWh\n";
-            cout << "Daily Cost:   " << costDay << "\n";
-            cout << "30-Day Energy: " << totalMonth << " kWh\n";
-            cout << "30-Day Cost:   " << costMonth << "\n";
+            saveToFile(appliances, count);
         }
-        else if (choice != 5) {
+        else {
             cout << "Feature not implemented yet.\n";
         }
 
-    } while (choice != 5);
+    } while (choice != 4);
 
     cout << "Goodbye.\n";
     return 0;
