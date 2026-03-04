@@ -24,7 +24,8 @@ int main() {
         cout << "1. Add Appliance\n";
         cout << "2. View Appliances\n";
         cout << "3. Search Appliance\n";
-        cout << "4. Exit\n";
+        cout << "4. Billing\n";
+        cout << "5. Exit\n";
         cout << "Choice: ";
         cin >> choice;
 
@@ -47,51 +48,35 @@ int main() {
             count++;
             cout << "Appliance added.\n";
         }
-        else if (choice == 2) {
+        else if (choice == 4) {
             if (count == 0) {
-                cout << "No appliances.\n";
+                cout << "No appliances available.\n";
                 continue;
             }
+
+            double tariff;
+            cout << "Tariff per kWh: ";
+            cin >> tariff;
+
+            double totalDay = 0;
+            for (int i = 0; i < count; i++)
+                totalDay += kwhPerDay(appliances[i]);
+
+            double totalMonth = totalDay * 30;
+            double costDay = totalDay * tariff;
+            double costMonth = totalMonth * tariff;
 
             cout << fixed << setprecision(2);
-            for (int i = 0; i < count; i++) {
-                cout << appliances[i].name << " | "
-                     << appliances[i].watts << "W | "
-                     << appliances[i].hours << " hrs | "
-                     << kwhPerDay(appliances[i]) << " kWh/day\n";
-            }
+            cout << "\nDaily Energy: " << totalDay << " kWh\n";
+            cout << "Daily Cost:   " << costDay << "\n";
+            cout << "30-Day Energy: " << totalMonth << " kWh\n";
+            cout << "30-Day Cost:   " << costMonth << "\n";
         }
-        else if (choice == 3) {
-            if (count == 0) {
-                cout << "No appliances.\n";
-                continue;
-            }
-
-            string search;
-            cout << "Search name: ";
-            cin.ignore();
-            getline(cin, search);
-
-            bool found = false;
-
-            for (int i = 0; i < count; i++) {
-                if (appliances[i].name.find(search) != string::npos) {
-                    cout << appliances[i].name << " | "
-                         << appliances[i].watts << "W | "
-                         << appliances[i].hours << " hrs | "
-                         << kwhPerDay(appliances[i]) << " kWh/day\n";
-                    found = true;
-                }
-            }
-
-            if (!found)
-                cout << "No match found.\n";
-        }
-        else if (choice != 4) {
-            cout << "Invalid choice.\n";
+        else if (choice != 5) {
+            cout << "Feature not implemented yet.\n";
         }
 
-    } while (choice != 4);
+    } while (choice != 5);
 
     cout << "Goodbye.\n";
     return 0;
