@@ -1,7 +1,17 @@
 #include <iostream>
 using namespace std;
 
+const int MAX = 100;
+
+struct Appliance {
+    string name;
+    double watts;
+    double hours;
+};
+
 int main() {
+    Appliance appliances[MAX];
+    int count = 0;
     int choice;
 
     do {
